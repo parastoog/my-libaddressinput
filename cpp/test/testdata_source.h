@@ -32,10 +32,10 @@ namespace addressinput {
 //      MyClass& operator=(const MyClass&) = delete;
 //
 //      MyClass() : data_ready_(BuildCallback(this, &MyClass::OnDataReady)) {
-//        base::FilePath src_path;
-//        CHECK(PathService::Get(base::DIR_SOURCE_ROOT, &src_path));
+//        base::FilePath data_file_name;
+//        CHECK(PathService::Get(base::DIR_SOURCE_ROOT, &data_file_name));
 //        source_ = new TestdataSource(/*aggregate=*/true,
-//                                     src_path.value() + '/');
+//                                     data_file_name.value() + '/');
 //      }
 //
 //      ~MyClass() { delete source_; }
@@ -62,8 +62,8 @@ class TestdataSource : public Source {
 
   // Will return aggregate data if |aggregate| is set to true.
   explicit TestdataSource(bool aggregate);
-  // |src_path| is the root of the source tree.
-  TestdataSource(bool aggregate, const std::string& src_path);
+
+  TestdataSource(bool aggregate, const std::string& data_file_name);
 
   virtual ~TestdataSource();
 
@@ -72,7 +72,7 @@ class TestdataSource : public Source {
 
  private:
   const bool aggregate_;
-  const std::string src_path_;
+  const std::string data_file_name_;
 };
 
 }  // namespace addressinput

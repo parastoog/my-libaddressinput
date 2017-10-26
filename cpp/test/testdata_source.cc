@@ -34,9 +34,6 @@ namespace {
 const char kNormalPrefix = '-';
 const char kAggregatePrefix = '+';
 
-// The name of the test data file.
-const char kDataFileName[] = TEST_DATA_DIR "/countryinfo.txt";
-
 // Each data key begins with this string. Example of a data key:
 //     data/CH/AG
 const char kDataKeyPrefix[] = "data/";
@@ -51,9 +48,8 @@ const size_t kCldrRegionCodeLength = 2;
 const size_t kAggregateDataKeyLength =
     kDataKeyPrefixLength + kCldrRegionCodeLength;
 
-std::map<std::string, std::string> InitData(const std::string& src_path) {
+std::map<std::string, std::string> InitData(const std::string& data_file_name) {
   std::map<std::string, std::string> data;
-  std::string data_file_name = src_path + kDataFileName;
   std::ifstream file(data_file_name);
   if (!file.is_open()) {
     std::cerr << "Error opening \"" << data_file_name << "\"." << std::endl;
@@ -139,15 +135,15 @@ std::map<std::string, std::string> InitData(const std::string& src_path) {
   return data;
 }
 
-const std::map<std::string, std::string>& GetData(const std::string& src_path) {
-  static const std::map<std::string, std::string> kData(InitData(src_path));
+const std::map<std::string, std::string>& GetData(const std::string& data_file_name) {
+  static const std::map<std::string, std::string> kData(InitData(data_file_name));
   return kData;
 }
 
 }  // namespace
 
-TestdataSource::TestdataSource(bool aggregate, const std::string& src_path)
-    : aggregate_(aggregate), src_path_(src_path) {}
+TestdataSource::TestdataSource(bool aggregate, const std::string& data_file_name)
+    : aggregate_(aggregate), data_file_name_(data_file_name) {}
 
 TestdataSource::TestdataSource(bool aggregate)
     : aggregate_(aggregate) {}
@@ -159,8 +155,8 @@ void TestdataSource::Get(const std::string& key,
   std::string prefixed_key(1, aggregate_ ? kAggregatePrefix : kNormalPrefix);
   prefixed_key += key;
   std::map<std::string, std::string>::const_iterator data_it =
-      GetData(src_path_).find(prefixed_key);
-  bool success = data_it != GetData(src_path_).end();
+      GetData(data_file_name_).find(prefixed_key);
+  bool success = data_it != GetData(data_file_name_).end();
   std::string* data = nullptr;
   if (success) {
     data = new std::string(data_it->second);
