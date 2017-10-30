@@ -63,7 +63,7 @@ class TestdataSource : public Source {
   // Will return aggregate data if |aggregate| is set to true.
   explicit TestdataSource(bool aggregate);
 
-  TestdataSource(bool aggregate, const std::string& data_file_name);
+  TestdataSource(bool aggregate, const char* data_file_name);
 
   virtual ~TestdataSource();
 
