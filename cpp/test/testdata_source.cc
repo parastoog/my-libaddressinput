@@ -142,7 +142,7 @@ const std::map<std::string, std::string>& GetData(const std::string& data_file_n
 
 }  // namespace
 
-TestdataSource::TestdataSource(bool aggregate, const char* data_file_name)
+TestdataSource::TestdataSource(bool aggregate, const std::string& data_file_name)
     : aggregate_(aggregate), data_file_name_(data_file_name) {}
 
 TestdataSource::TestdataSource(bool aggregate)
