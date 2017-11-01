@@ -32,6 +32,9 @@ using i18n::addressinput::RegionDataConstants;
 using i18n::addressinput::Source;
 using i18n::addressinput::TestdataSource;
 
+// The name of the test data file.
+const char kDataFileName[] = TEST_DATA_DIR "/countryinfo.txt";
+
 // Tests for TestdataSource object.
 class TestdataSourceTest : public testing::TestWithParam<std::string> {
  public:
@@ -41,9 +44,9 @@ class TestdataSourceTest : public testing::TestWithParam<std::string> {
  protected:
   TestdataSourceTest()
       : source_(false),
-        source_with_path_(false, ""),
+        source_with_path_(false, kDataFileName),
         aggregate_source_(true),
-        aggregate_source_with_path_(true, ""),
+        aggregate_source_with_path_(true, kDataFileName),
         success_(false),
         key_(),
         data_(),
