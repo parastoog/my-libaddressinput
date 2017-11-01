@@ -32,10 +32,11 @@ namespace addressinput {
 //      MyClass& operator=(const MyClass&) = delete;
 //
 //      MyClass() : data_ready_(BuildCallback(this, &MyClass::OnDataReady)) {
-//        base::FilePath data_file_name;
-//        CHECK(PathService::Get(base::DIR_SOURCE_ROOT, &data_file_name));
+//        base::FilePath file_path;
+//        CHECK(PathService::Get(base::DIR_SOURCE_ROOT, &file_path));
+//        file_path = file_path.Append(FILE_PATH_LITERAL("from/src/to/test_file/path"));
 //        source_ = new TestdataSource(/*aggregate=*/true,
-//                                     data_file_name.value() + '/');
+//                                     file_path.AsUTF8Unsafe());
 //      }
 //
 //      ~MyClass() { delete source_; }
@@ -61,6 +62,8 @@ class TestdataSource : public Source {
   TestdataSource& operator=(const TestdataSource&) = delete;
 
   // Will return aggregate data if |aggregate| is set to true.
+
+  // This constructor uses a relative path to the test file.
   explicit TestdataSource(bool aggregate);
 
   TestdataSource(bool aggregate, const std::string& data_file_name);
