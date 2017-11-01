@@ -33,7 +33,7 @@ using i18n::addressinput::Source;
 using i18n::addressinput::TestdataSource;
 
 // The name of the test data file.
-const char kDataFileName[] = TEST_DATA_DIR "/countryinfo.txt";
+const char kDataFileName[] = "src/third_party/libaddressinput/src/testdata/countryinfo.txt";
 
 // Tests for TestdataSource object.
 class TestdataSourceTest : public testing::TestWithParam<std::string> {
