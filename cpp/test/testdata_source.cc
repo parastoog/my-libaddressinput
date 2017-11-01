@@ -34,6 +34,9 @@ namespace {
 const char kNormalPrefix = '-';
 const char kAggregatePrefix = '+';
 
+// The name of the test data file.
+const char kDataFileName[] = TEST_DATA_DIR "/countryinfo.txt";
+
 // Each data key begins with this string. Example of a data key:
 //     data/CH/AG
 const char kDataKeyPrefix[] = "data/";
@@ -146,7 +149,7 @@ TestdataSource::TestdataSource(bool aggregate, const std::string& data_file_name
     : aggregate_(aggregate), data_file_name_(data_file_name) {}
 
 TestdataSource::TestdataSource(bool aggregate)
-    : aggregate_(aggregate) {}
+    : aggregate_(aggregate), data_file_name_(kDataFileName) {}
 
 TestdataSource::~TestdataSource() {}
 
