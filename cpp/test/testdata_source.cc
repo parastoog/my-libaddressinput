@@ -26,6 +26,9 @@
 namespace i18n {
 namespace addressinput {
 
+// The name of the test data file.
+const char kDataFileName[] = TEST_DATA_DIR "/countryinfo.txt";
+
 namespace {
 
 // For historical reasons, normal and aggregated data is here stored in the
@@ -33,9 +36,6 @@ namespace {
 // seem like a good idea to refactor this.
 const char kNormalPrefix = '-';
 const char kAggregatePrefix = '+';
-
-// The name of the test data file.
-const char kDataFileName[] = TEST_DATA_DIR "/countryinfo.txt";
 
 // Each data key begins with this string. Example of a data key:
 //     data/CH/AG
@@ -51,11 +51,11 @@ const size_t kCldrRegionCodeLength = 2;
 const size_t kAggregateDataKeyLength =
     kDataKeyPrefixLength + kCldrRegionCodeLength;
 
-std::map<std::string, std::string> InitData(const std::string& data_file_name) {
+std::map<std::string, std::string> InitData(const std::string& abs_testdata_path) {
   std::map<std::string, std::string> data;
-  std::ifstream file(data_file_name);
+  std::ifstream file(abs_testdata_path);
   if (!file.is_open()) {
-    std::cerr << "Error opening \"" << data_file_name << "\"." << std::endl;
+    std::cerr << "Error opening \"" << abs_testdata_path << "\"." << std::endl;
     std::exit(EXIT_FAILURE);
   }
 
@@ -138,18 +138,18 @@ std::map<std::string, std::string> InitData(const std::string& data_file_name) {
   return data;
 }
 
-const std::map<std::string, std::string>& GetData(const std::string& data_file_name) {
-  static const std::map<std::string, std::string> kData(InitData(data_file_name));
+const std::map<std::string, std::string>& GetData(const std::string& abs_testdata_path) {
+  static const std::map<std::string, std::string> kData(InitData(abs_testdata_path));
   return kData;
 }
 
 }  // namespace
 
-TestdataSource::TestdataSource(bool aggregate, const std::string& data_file_name)
-    : aggregate_(aggregate), data_file_name_(data_file_name) {}
+TestdataSource::TestdataSource(bool aggregate, const std::string& abs_testdata_path)
+    : aggregate_(aggregate), abs_testdata_path_(abs_testdata_path) {}
 
 TestdataSource::TestdataSource(bool aggregate)
-    : aggregate_(aggregate), data_file_name_(kDataFileName) {}
+    : aggregate_(aggregate), abs_testdata_path_(kDataFileName) {}
 
 TestdataSource::~TestdataSource() {}
 
@@ -158,8 +158,8 @@ void TestdataSource::Get(const std::string& key,
   std::string prefixed_key(1, aggregate_ ? kAggregatePrefix : kNormalPrefix);
   prefixed_key += key;
   std::map<std::string, std::string>::const_iterator data_it =
-      GetData(data_file_name_).find(prefixed_key);
-  bool success = data_it != GetData(data_file_name_).end();
+      GetData(abs_testdata_path_).find(prefixed_key);
+  bool success = data_it != GetData(abs_testdata_path_).end();
   std::string* data = nullptr;
   if (success) {
     data = new std::string(data_it->second);

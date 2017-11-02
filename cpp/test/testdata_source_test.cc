@@ -31,9 +31,7 @@ using i18n::addressinput::BuildCallback;
 using i18n::addressinput::RegionDataConstants;
 using i18n::addressinput::Source;
 using i18n::addressinput::TestdataSource;
-
-// The name of the test data file.
-const char kDataFileName[] = "src/third_party/libaddressinput/src/testdata/countryinfo.txt";
+using i18n::addressinput::kDataFileName;
 
 // Tests for TestdataSource object.
 class TestdataSourceTest : public testing::TestWithParam<std::string> {
