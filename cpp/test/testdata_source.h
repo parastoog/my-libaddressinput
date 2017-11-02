@@ -25,21 +25,19 @@
 namespace i18n {
 namespace addressinput {
 
+extern const char kDataFileName[];
+
 // Gets address metadata from a text file. Sample usage:
 //    class MyClass {
 //     public:
 //      MyClass(const MyClass&) = delete;
 //      MyClass& operator=(const MyClass&) = delete;
 //
-//      MyClass() : data_ready_(BuildCallback(this, &MyClass::OnDataReady)) {
-//        base::FilePath file_path;
-//        CHECK(PathService::Get(base::DIR_SOURCE_ROOT, &file_path));
-//        file_path = file_path.Append(FILE_PATH_LITERAL("from/src/to/test_file/path"));
-//        source_ = new TestdataSource(/*aggregate=*/true,
-//                                     file_path.AsUTF8Unsafe());
-//      }
+//      MyClass() : data_ready_(BuildCallback(this, &MyClass::OnDataReady)),
+//                              source_(/*aggregate=*/true,
+//                                      "/absolute/path/to/test/data/file") {}
 //
-//      ~MyClass() { delete source_; }
+//      ~MyClass() {}
 //
 //      void GetData(const std::string& key) {
 //        source_->Get(key, *data_ready_);
@@ -54,7 +52,7 @@ namespace addressinput {
 //      }
 //
 //      const std::unique_ptr<const Source::Callback> data_ready_;
-//      const TestdataSource* source_;
+//      const TestdataSource source_;
 //    };
 class TestdataSource : public Source {
  public:
@@ -62,11 +60,11 @@ class TestdataSource : public Source {
   TestdataSource& operator=(const TestdataSource&) = delete;
 
   // Will return aggregate data if |aggregate| is set to true.
-
   // This constructor uses a relative path to the test file.
   explicit TestdataSource(bool aggregate);
 
-  TestdataSource(bool aggregate, const std::string& data_file_name);
+  // |abs_testdata_path| is an absolute path to the test data file.
+  TestdataSource(bool aggregate, const std::string& abs_testdata_path);
 
   virtual ~TestdataSource();
 
@@ -75,7 +73,7 @@ class TestdataSource : public Source {
 
  private:
   const bool aggregate_;
-  const std::string data_file_name_;
+  const std::string abs_testdata_path_;
 };
 
 }  // namespace addressinput
