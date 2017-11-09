@@ -14,6 +14,7 @@
 
 #include "validation_task.h"
 
+
 #include <libaddressinput/address_data.h>
 #include <libaddressinput/address_field.h>
 #include <libaddressinput/address_metadata.h>
@@ -36,7 +37,9 @@
 #include "rule.h"
 #include "util/re2ptr.h"
 #include "util/size.h"
+#include "util/string_compare.h"
 
+#include "base/logging.h"
 namespace i18n {
 namespace addressinput {
 
@@ -62,10 +65,11 @@ ValidationTask::ValidationTask(const AddressData& address,
 ValidationTask::~ValidationTask() {
 }
 
-void ValidationTask::Run(Supplier* supplier) const {
+void ValidationTask::Run(PreloadSupplier* supplier) {
   assert(supplier != nullptr);
   problems_->clear();
   lookup_key_->FromAddress(address_);
+  supplier_ = supplier;
   supplier->Supply(*lookup_key_, *supplied_);
 }
 
@@ -155,12 +159,68 @@ void ValidationTask::CheckMissingRequiredField(
 // of that field to one of those possible values, therefore returning nullptr.
 void ValidationTask::CheckUnknownValue(
     const Supplier::RuleHierarchy& hierarchy) const {
+  AddressData region_address;
+  region_address.region_code = address_.region_code;
+  LookupKey parent_key;
+  parent_key.FromAddress(region_address);
+  const Rule* parent_rule = supplier_->GetRule(parent_key);
+  // Since we only set the |region_code| in the |region_address|, and the rule
+  // for the |region_code| is already loaded, |parent_rule| should not be null.
+  assert(parent_rule != nullptr);
+
+  std::vector<std::string> languages(parent_rule->GetLanguages());
+
+  if (languages.empty()) {
+    languages.push_back("");
+  } else {
+    languages[0] = "";  // The default language doesn't need a tag on the id.
+  }
+  StringCompare compare;
+  LookupKey lookup_key;
   for (size_t depth = 1; depth < size(LookupKey::kHierarchy); ++depth) {
     AddressField field = LookupKey::kHierarchy[depth];
-    if (!(address_.IsFieldEmpty(field) ||
-          hierarchy.rule[depth - 1] == nullptr ||
-          hierarchy.rule[depth - 1]->GetSubKeys().empty() ||
-          hierarchy.rule[depth] != nullptr)) {
+    if (address_.IsFieldEmpty(field) ||
+        hierarchy.rule[depth - 1] == nullptr ||
+        hierarchy.rule[depth - 1]->GetSubKeys().empty() ||
+        hierarchy.rule[depth] != nullptr) {
+      continue;
+    }
+    const std::string& field_value = address_.GetFieldValue(field);
+    bool no_match_found_yet = true;
+
+    const std::vector<std::string>& sub_keys = parent_rule->GetSubKeys();
+
+    for (size_t i = 0; i < sub_keys.size(); i++) {
+      const std::string& sub_key = sub_keys[i];
+      if (!no_match_found_yet)
+        break;
+      for (const std::string& language : languages) {
+        if (language.empty()) continue; // Already checked for default language.
+        lookup_key.set_language(language);
+        lookup_key.FromLookupKey(parent_key, sub_key);
+        const Rule* rule = supplier_->GetRule(lookup_key);
+
+        // A rule with key = |subkey| and specified |language| was expected to
+        // be found in a certain format (e.g. data/CA/QC--fr), but it was not.
+        // This is due to a possible inconsistency in the data format.
+        if (rule == nullptr) continue;
+
+        bool matches_latin_name =
+            compare.NaturalEquals(field_value, rule->GetLatinName());
+        bool matches_local_name_id =
+            compare.NaturalEquals(field_value, sub_key) ||
+            compare.NaturalEquals(field_value, rule->GetName());
+        if (matches_latin_name || matches_local_name_id) {
+          no_match_found_yet = false;
+          parent_key.FromLookupKey(parent_key, sub_key);
+          parent_rule = supplier_->GetRule(parent_key);
+          assert(parent_rule != nullptr);
+          break;
+        }
+      }
+    }
+    if (no_match_found_yet) {
+      // If doesn't match in any language, then we should report.
       ReportProblemMaybe(field, UNKNOWN_VALUE);
     }
   }
