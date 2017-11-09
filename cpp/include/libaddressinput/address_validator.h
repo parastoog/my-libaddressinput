@@ -22,6 +22,7 @@
 #include <libaddressinput/address_field.h>
 #include <libaddressinput/address_problem.h>
 #include <libaddressinput/callback.h>
+#include <libaddressinput/preload_supplier.h>
 
 #include <map>
 
@@ -74,7 +75,7 @@ class AddressValidator {
   AddressValidator& operator=(const AddressValidator&) = delete;
 
   // Does not take ownership of |supplier|.
-  AddressValidator(Supplier* supplier);
+  AddressValidator(PreloadSupplier* supplier);
   ~AddressValidator();
 
   // Validates the |address| and populates |problems| with the validation
@@ -103,7 +104,7 @@ class AddressValidator {
                 const Callback& validated) const;
 
  private:
-  Supplier* const supplier_;
+  PreloadSupplier* const supplier_;
 };
 
 }  // namespace addressinput
