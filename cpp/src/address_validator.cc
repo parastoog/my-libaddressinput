@@ -22,7 +22,7 @@
 namespace i18n {
 namespace addressinput {
 
-AddressValidator::AddressValidator(Supplier* supplier) : supplier_(supplier) {
+AddressValidator::AddressValidator(PreloadSupplier* supplier) : supplier_(supplier) {
   assert(supplier_ != nullptr);
 }
 
