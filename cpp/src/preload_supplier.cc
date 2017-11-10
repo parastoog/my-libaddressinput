@@ -75,12 +75,14 @@ class Helper {
          const Retriever& retriever,
          std::set<std::string>* pending,
          IndexMap* rule_index,
+         IndexMap* global_rule_index,
          std::vector<const Rule*>* rule_storage,
          std::map<std::string, const Rule*>* region_rules)
       : region_code_(region_code),
         loaded_(loaded),
         pending_(pending),
         rule_index_(rule_index),
+        language_rule_index(global_rule_index),
         rule_storage_(rule_storage),
         region_rules_(region_rules),
         retrieved_(BuildCallback(this, &Helper::OnRetrieved)) {
@@ -111,6 +113,7 @@ class Helper {
 
     IndexMap::iterator last_index_it = rule_index_->end();
     IndexMap::iterator last_latin_it = rule_index_->end();
+    IndexMap::iterator language_index_it = language_rule_index->end();
     std::map<std::string, const Rule*>::iterator last_region_it =
         region_rules_->end();
 
@@ -232,6 +235,7 @@ class Helper {
         const std::string& id = (*it)->GetId();
         std::string::size_type pos = id.rfind("--");
         if (pos != std::string::npos) {
+          language_index_it = language_rule_index->insert(language_index_it, std::make_pair(human_id, *it));
           human_id.append(id, pos, id.size() - pos);
         }
       }
@@ -257,6 +261,7 @@ class Helper {
   const PreloadSupplier::Callback& loaded_;
   std::set<std::string>* const pending_;
   IndexMap* const rule_index_;
+  IndexMap* const language_rule_index;
   std::vector<const Rule*>* const rule_storage_;
   std::map<std::string, const Rule*>* const region_rules_;
   const std::unique_ptr<const Retriever::Callback> retrieved_;
@@ -276,6 +281,7 @@ PreloadSupplier::PreloadSupplier(const Source* source, Storage* storage)
     : retriever_(new Retriever(source, storage)),
       pending_(),
       rule_index_(new IndexMap),
+      language_rule_index(new IndexMap),
       rule_storage_(),
       region_rules_() {}
 
@@ -329,6 +335,7 @@ void PreloadSupplier::LoadRules(const std::string& region_code,
       *retriever_,
       &pending_,
       rule_index_.get(),
+      language_rule_index.get(),
       &rule_storage_,
       &region_rules_[region_code]);
 }
@@ -347,17 +354,6 @@ bool PreloadSupplier::IsPending(const std::string& region_code) const {
   return IsPendingKey(KeyFromRegionCode(region_code));
 }
 
-IndexMap::const_iterator SearchGlobally(
-  const std::string& key, const std::unique_ptr<IndexMap> &rule_index) {
-  const size_t key_size = key.size();
-  for (auto it = rule_index->begin(); it != rule_index->end(); ++it) {
-    if (it->first.find(key) == 0 && it->first.find("--") == key_size) {
-      return it;
-    }
-  }
-  return rule_index->end();
-}
-
 bool PreloadSupplier::GetRuleHierarchy(const LookupKey& lookup_key,
                                        RuleHierarchy* hierarchy,
                                        const bool search_globally) const {
@@ -373,9 +369,9 @@ bool PreloadSupplier::GetRuleHierarchy(const LookupKey& lookup_key,
       IndexMap::const_iterator it = rule_index_->find(key);
       if (it == rule_index_->end() && search_globally && depth > 0
           && hierarchy->rule[0]->GetLanguages().size() > 0) {
-        it = SearchGlobally(key, rule_index_);
+        it = language_rule_index->find(key);
       }
-      if (it == rule_index_->end()) {
+      if (it == rule_index_->end() || it == language_rule_index->end()) {
        return depth > 0;  // No data on COUNTRY level is failure.
       }
       hierarchy->rule[depth] = it->second;

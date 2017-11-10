@@ -98,6 +98,7 @@ class PreloadSupplier : public Supplier {
   const std::unique_ptr<const Retriever> retriever_;
   std::set<std::string> pending_;
   const std::unique_ptr<IndexMap> rule_index_;
+  const std::unique_ptr<IndexMap> language_rule_index;
   std::vector<const Rule*> rule_storage_;
   std::map<std::string, std::map<std::string, const Rule*> > region_rules_;
 };
