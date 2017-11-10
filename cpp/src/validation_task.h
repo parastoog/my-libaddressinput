@@ -18,7 +18,7 @@
 #include <libaddressinput/address_field.h>
 #include <libaddressinput/address_problem.h>
 #include <libaddressinput/address_validator.h>
-#include <libaddressinput/supplier.h>
+#include <libaddressinput/preload_supplier.h>
 
 #include <memory>
 #include <string>
@@ -48,7 +48,7 @@ class ValidationTask {
   ~ValidationTask();
 
   // Calls supplier->Load(), with Validate() as callback.
-  void Run(Supplier* supplier) const;
+  void Run(PreloadSupplier* supplier);
 
  private:
   friend class ValidationTaskTest;
@@ -93,6 +93,7 @@ class ValidationTask {
   const AddressValidator::Callback& validated_;
   const std::unique_ptr<const Supplier::Callback> supplied_;
   const std::unique_ptr<LookupKey> lookup_key_;
+  PreloadSupplier* supplier_;
 };
 
 }  // namespace addressinput
