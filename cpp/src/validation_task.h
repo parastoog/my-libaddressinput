@@ -48,7 +48,7 @@ class ValidationTask {
   ~ValidationTask();
 
   // Calls supplier->Load(), with Validate() as callback.
-  void Run(PreloadSupplier* supplier);
+  void Run(Supplier* supplier);
 
  private:
   friend class ValidationTaskTest;
@@ -93,7 +93,6 @@ class ValidationTask {
   const AddressValidator::Callback& validated_;
   const std::unique_ptr<const Supplier::Callback> supplied_;
   const std::unique_ptr<LookupKey> lookup_key_;
-  PreloadSupplier* supplier_;
 };
 
 }  // namespace addressinput

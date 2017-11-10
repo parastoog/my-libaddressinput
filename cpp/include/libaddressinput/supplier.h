@@ -40,6 +40,10 @@ class Supplier {
   virtual void Supply(const LookupKey& lookup_key,
                       const Callback& supplied) = 0;
 
+  virtual void SupplyGlobally(const LookupKey& lookup_key,
+                              const Callback& supplied) = 0;
+
+
   // A RuleHierarchy object encapsulates the hierarchical list of Rule objects
   // that corresponds to a particular LookupKey.
   struct RuleHierarchy {

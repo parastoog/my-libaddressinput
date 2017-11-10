@@ -64,6 +64,10 @@ class PreloadSupplier : public Supplier {
   virtual void Supply(const LookupKey& lookup_key,
                       const Supplier::Callback& supplied);
 
+  virtual void SupplyGlobally(const LookupKey& lookup_key,
+                              const Supplier::Callback& supplied);
+
+
   // Should be called only when IsLoaded() returns true for the region code of
   // the |lookup_key|. Can return nullptr if the |lookup_key| does not
   // correspond to any rule data. The caller does not own the result.
@@ -86,13 +90,15 @@ class PreloadSupplier : public Supplier {
 
  private:
   bool GetRuleHierarchy(const LookupKey& lookup_key,
-                        RuleHierarchy* hierarchy) const;
+                        RuleHierarchy* hierarchy,
+                        const bool search_globally) const;
   bool IsLoadedKey(const std::string& key) const;
   bool IsPendingKey(const std::string& key) const;
 
   const std::unique_ptr<const Retriever> retriever_;
   std::set<std::string> pending_;
   const std::unique_ptr<IndexMap> rule_index_;
+  const std::unique_ptr<IndexMap> language_rule_index;
   std::vector<const Rule*> rule_storage_;
   std::map<std::string, std::map<std::string, const Rule*> > region_rules_;
 };
