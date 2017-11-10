@@ -289,14 +289,21 @@ PreloadSupplier::~PreloadSupplier() {
 void PreloadSupplier::Supply(const LookupKey& lookup_key,
                              const Supplier::Callback& supplied) {
   Supplier::RuleHierarchy hierarchy;
-  bool success = GetRuleHierarchy(lookup_key, &hierarchy);
+  bool success = GetRuleHierarchy(lookup_key, &hierarchy, false);
+  supplied(success, lookup_key, hierarchy);
+}
+
+void PreloadSupplier::SupplyGlobally(const LookupKey& lookup_key,
+                                     const Supplier::Callback& supplied) {
+  Supplier::RuleHierarchy hierarchy;
+  bool success = GetRuleHierarchy(lookup_key, &hierarchy, true);
   supplied(success, lookup_key, hierarchy);
 }
 
 const Rule* PreloadSupplier::GetRule(const LookupKey& lookup_key) const {
   assert(IsLoaded(lookup_key.GetRegionCode()));
   Supplier::RuleHierarchy hierarchy;
-  if (!GetRuleHierarchy(lookup_key, &hierarchy)) {
+  if (!GetRuleHierarchy(lookup_key, &hierarchy, false)) {
     return nullptr;
   }
   return hierarchy.rule[lookup_key.GetDepth()];
@@ -340,8 +347,20 @@ bool PreloadSupplier::IsPending(const std::string& region_code) const {
   return IsPendingKey(KeyFromRegionCode(region_code));
 }
 
+IndexMap::const_iterator SearchGlobally(
+  const std::string& key, const std::unique_ptr<IndexMap> &rule_index) {
+  const size_t key_size = key.size();
+  for (auto it = rule_index->begin(); it != rule_index->end(); ++it) {
+    if (it->first.find(key) == 0 && it->first.find("--") == key_size) {
+      return it;
+    }
+  }
+  return rule_index->end();
+}
+
 bool PreloadSupplier::GetRuleHierarchy(const LookupKey& lookup_key,
-                                       RuleHierarchy* hierarchy) const {
+                                       RuleHierarchy* hierarchy,
+                                       const bool search_globally) const {
   assert(hierarchy != nullptr);
 
   if (RegionDataConstants::IsSupported(lookup_key.GetRegionCode())) {
@@ -352,8 +371,12 @@ bool PreloadSupplier::GetRuleHierarchy(const LookupKey& lookup_key,
     for (size_t depth = 0; depth <= max_depth; ++depth) {
       const std::string& key = lookup_key.ToKeyString(depth);
       IndexMap::const_iterator it = rule_index_->find(key);
+      if (it == rule_index_->end() && search_globally && depth > 0
+          && hierarchy->rule[0]->GetLanguages().size() > 0) {
+        it = SearchGlobally(key, rule_index_);
+      }
       if (it == rule_index_->end()) {
-        return depth > 0;  // No data on COUNTRY level is failure.
+       return depth > 0;  // No data on COUNTRY level is failure.
       }
       hierarchy->rule[depth] = it->second;
     }
