@@ -75,7 +75,7 @@ class AddressValidator {
   AddressValidator& operator=(const AddressValidator&) = delete;
 
   // Does not take ownership of |supplier|.
-  AddressValidator(PreloadSupplier* supplier);
+  AddressValidator(Supplier* supplier);
   ~AddressValidator();
 
   // Validates the |address| and populates |problems| with the validation
@@ -104,7 +104,7 @@ class AddressValidator {
                 const Callback& validated) const;
 
  private:
-  PreloadSupplier* const supplier_;
+  Supplier* const supplier_;
 };
 
 }  // namespace addressinput

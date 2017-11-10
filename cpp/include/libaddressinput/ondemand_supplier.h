@@ -54,6 +54,8 @@ class OndemandSupplier : public Supplier {
 
   // Loads the metadata needed for |lookup_key|, then calls |supplied|.
   virtual void Supply(const LookupKey& lookup_key, const Callback& supplied);
+  virtual void SupplyGlobally(const LookupKey& lookup_key,
+                              const Callback& supplied);
 
  private:
   const std::unique_ptr<const Retriever> retriever_;
