@@ -48,7 +48,7 @@ class ValidationTask {
   ~ValidationTask();
 
   // Calls supplier->Load(), with Validate() as callback.
-  void Run(Supplier* supplier);
+  void Run(Supplier* supplier) const;
 
  private:
   friend class ValidationTaskTest;
