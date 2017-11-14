@@ -12,62 +12,57 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <libaddressinput/ondemand_supplier.h>
+#ifndef I18N_ADDRESSINPUT_ONDEMAND_SUPPLIER_H_
+#define I18N_ADDRESSINPUT_ONDEMAND_SUPPLIER_H_
 
-#include <algorithm>
-#include <cstddef>
+#include <libaddressinput/callback.h>
+#include <libaddressinput/supplier.h>
+
 #include <map>
+#include <memory>
 #include <string>
-
-#include "lookup_key.h"
-#include "ondemand_supply_task.h"
-#include "region_data_constants.h"
-#include "retriever.h"
-#include "rule.h"
 
 namespace i18n {
 namespace addressinput {
 
-OndemandSupplier::OndemandSupplier(const Source* source, Storage* storage)
-    : retriever_(new Retriever(source, storage)) {
-}
+class LookupKey;
+class Retriever;
+class Rule;
+class Source;
+class Storage;
 
-OndemandSupplier::~OndemandSupplier() {
-  for (std::map<std::string, const Rule*>::const_iterator
-       it = rule_cache_.begin(); it != rule_cache_.end(); ++it) {
-    delete it->second;
-  }
-}
-void OndemandSupplier::SupplyGlobally(const LookupKey& lookup_key,
-                            const Callback& supplied) {
-  Supply(lookup_key, supplied);
-}
+// An implementation of the Supplier interface that owns a Retriever object,
+// through which it loads address metadata as needed, creating Rule objects and
+// caching these.
+//
+// When using an OndemandSupplier, address validation will benefit from address
+// metadata server synonym resolution, because the server will be contacted for
+// every new LookupKey (ie. every LookupKey that isn't on canonical form and
+// isn't already cached).
+//
+// The maximum size of this cache is naturally limited to the amount of data
+// available from the data server. (Currently this is less than 12,000 items of
+// in total less than 2 MB of JSON data.)
+class OndemandSupplier : public Supplier {
+ public:
+  OndemandSupplier(const OndemandSupplier&) = delete;
+  OndemandSupplier& operator=(const OndemandSupplier&) = delete;
 
+  // Takes ownership of |source| and |storage|.
+  OndemandSupplier(const Source* source, Storage* storage);
+  virtual ~OndemandSupplier();
 
-void OndemandSupplier::Supply(const LookupKey& lookup_key,
-                              const Callback& supplied) {
-  OndemandSupplyTask* task =
-      new OndemandSupplyTask(lookup_key, &rule_cache_, supplied);
+  // Loads the metadata needed for |lookup_key|, then calls |supplied|.
+  virtual void Supply(const LookupKey& lookup_key, const Callback& supplied);
+  virtual void SupplyGlobally(const LookupKey& lookup_key,
+                              const Callback& supplied);
 
-  if (RegionDataConstants::IsSupported(lookup_key.GetRegionCode())) {
-    size_t max_depth = std::min(
-        lookup_key.GetDepth(),
-        RegionDataConstants::GetMaxLookupKeyDepth(lookup_key.GetRegionCode()));
-
-    for (size_t depth = 0; depth <= max_depth; ++depth) {
-      const std::string& key = lookup_key.ToKeyString(depth);
-      std::map<std::string, const Rule*>::const_iterator it =
-          rule_cache_.find(key);
-      if (it != rule_cache_.end()) {
-        task->hierarchy_.rule[depth] = it->second;
-      } else {
-        task->Queue(key);  // If not in the cache, it needs to be loaded.
-      }
-    }
-  }
-
-  task->Retrieve(*retriever_);
-}
+ private:
+  const std::unique_ptr<const Retriever> retriever_;
+  std::map<std::string, const Rule*> rule_cache_;
+};
 
 }  // namespace addressinput
 }  // namespace i18n
+
+#endif  // I18N_ADDRESSINPUT_ONDEMAND_SUPPLIER_H_
