@@ -14,7 +14,6 @@
 
 #include "validation_task.h"
 
-
 #include <libaddressinput/address_data.h>
 #include <libaddressinput/address_field.h>
 #include <libaddressinput/address_metadata.h>
@@ -37,7 +36,6 @@
 #include "rule.h"
 #include "util/re2ptr.h"
 #include "util/size.h"
-#include "util/string_compare.h"
 
 namespace i18n {
 namespace addressinput {
@@ -64,7 +62,7 @@ ValidationTask::ValidationTask(const AddressData& address,
 ValidationTask::~ValidationTask() {
 }
 
-void ValidationTask::Run(Supplier* supplier) {
+void ValidationTask::Run(Supplier* supplier) const {
   assert(supplier != nullptr);
   problems_->clear();
   lookup_key_->FromAddress(address_);
@@ -157,7 +155,7 @@ void ValidationTask::CheckMissingRequiredField(
 // of that field to one of those possible values, therefore returning nullptr.
 void ValidationTask::CheckUnknownValue(
     const Supplier::RuleHierarchy& hierarchy) const {
- for (size_t depth = 1; depth < size(LookupKey::kHierarchy); ++depth) {
+  for (size_t depth = 1; depth < size(LookupKey::kHierarchy); ++depth) {
     AddressField field = LookupKey::kHierarchy[depth];
     if (!(address_.IsFieldEmpty(field) ||
           hierarchy.rule[depth - 1] == nullptr ||
